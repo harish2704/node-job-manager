@@ -2,7 +2,7 @@
   "name": "job-manager",
   "version": "0.0.1",
   "description": "A task manager class wich runs tasks with given workers, running N tasks at a time, automatically load works, pause resume etc",
-  "main": "index.js",
+  "main": "src/JobManager.js",
   "scripts": {
     "test": "mocha -R spec test/*.spec.js"
   },
