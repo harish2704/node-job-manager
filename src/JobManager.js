@@ -2,7 +2,7 @@
 
 var utils = require('./utils');
 
-var STATE = utils.createEnum(['INITIALIZING', 'INITIALIZED', 'STARTED', 'RUNNING', 'PAUSING', 'PAUSED', 'STOPPED']);
+var STATE = utils.createEnum([ 'RUNNING' , 'NOT_RUNNING']);
 
 function JobManager(opts){
 
@@ -11,7 +11,7 @@ function JobManager(opts){
     this.concurrency = opts.concurrency || 20;
     
     // state
-    this.state = STATE.INITIALIZED;
+    this.state = STATE.NOT_RUNNING;
 
     this.workers = [];
     this.tasks = [];
@@ -19,94 +19,90 @@ function JobManager(opts){
     this.onLoadMore = null;
     this.onError = null;
     this.isLoadingTakingPlace = false;
-    this.tmpPool = [];
+    this.runningTasks = 0;
 }
-JobManager.prototype.__defineSetter__( 'workers', function(workers){
-    var tmpPool = Array( workers.length > this.concurrency? workers.length : this.concurrency ), i, l, j;
-    this.$workers = workers;
-    if(! tmpPool.length ){
-        return;
-    }
-    for( i = 0, j=0, l = tmpPool.length; i< l; i++, j++ ){
-        if(j == workers.length ){ j =0; }
-        tmpPool[i] = workers[j];
+/*
+ * JobManager.prototype.__defineSetter__( 'workers', function(workers){
+ *     this.$workers = workers;
+ *     this.updateState();
+ * });
+ */
+
+JobManager.prototype.updateState = function(){
+    var workers = this.workers;
+    var tmpPoolLen = workers.length &&  (workers.length * Math.ceil( this.concurrency/workers.length ) ) , i;
+    var tmpPool = [];
+    for( i=0; i < tmpPoolLen; i++){
+        tmpPool[i] = workers[ i % workers.length ];
     }
     this.tmpPool = tmpPool;
-});
-
-JobManager.prototype.__defineGetter__( 'workers', function(){
-    return this.$workers;
-});
-
-JobManager.prototype.returnToPool = function (w){
-    this.tmpPool.push(w);
 };
 
-JobManager.prototype.$doWork = function( task, worker, cb ){
+/*
+ * JobManager.prototype.__defineGetter__( 'workers', function(){
+ *     return this.$workers;
+ * });
+ */
+
+JobManager.prototype.returnToPool = function (w){
+    this.runningTasks--;
+    this.tmpPool.push( w );
+};
+
+JobManager.prototype.getFromPool = function(){
+    if( this.runningTasks < this.concurrency ){
+        this.runningTasks++;
+        return this.tmpPool.splice(0,1)[0];
+    }
+};
+
+JobManager.prototype.$doWork_ = function( cb ){
     var self = this;
+    var worker = self.getFromPool();
+    var task = self.tasks.splice(0, 1)[0];
     this.work( task, worker, function(err){
         if(err){
             self.onError(err, task, worker );
         }
+        if(self.tasks.length/self.concurrency < self.notifyAt && (!self.isLoadingTakingPlace) ){
+            if( self.onLoadMore ) {
+                self.$onLoadMore();
+            }
+        }
+        cb();
         self.returnToPool( worker );
-        return cb();
     });
 };
 
-JobManager.prototype.getFromPool = function(){
-    return this.tmpPool.splice(0,1)[0];
+
+JobManager.prototype.$trigger = function (){
+    var self = this;
+    while( this.runningTasks < this.concurrency && this.state == STATE.RUNNING && this.tasks.length  ){
+        this.$doWork_( function(){
+            self.$trigger();
+        });
+    }
 };
 
-
-
-JobManager.prototype.start = function( ){
-    var self = this;
-    var tasks, workers=[], i;
-    if ( this.state != STATE.INITIALIZED ){
-        throw new Error('Invalid state', STATE.INITIALIZED );
-    }
+JobManager.prototype._start = function( ) {
     this.state = STATE.RUNNING;
-    var numOfTasks = self.concurrency;
-    if( numOfTasks > self.tasks.length ){
-        numOfTasks = self.tasks.length;
-    }
-    tasks = self.tasks.splice(0,numOfTasks);
-    for(i=0; i< numOfTasks; i++){
-        workers.push( self.getFromPool() );
-    }
-    tasks.forEach(function(task, i){
-        var worker = workers[i];
-        var cb = function(){
-            var i,l;
-            if(self.tasks.length/self.concurrency < self.notifyAt && (!self.isLoadingTakingPlace) ){
-                if( self.onLoadMore ) {
-                    self.isLoadingTakingPlace = true;
-                    self.onLoadMore(function(){
-                        self.isLoadingTakingPlace = false;
-                    });
-                }
-            }
-            if(self.state != STATE.RUNNING ){
-                return;
-            }
-            var nextTask = self.tasks.splice(0,1)[0];
-            if (!nextTask){
-                self.state = STATE.STOPPED;
-                return;
-            }
-            // console.log( 'lastUsed', self.lastUsedWorker );
-            self.$doWork( nextTask, self.getFromPool(), cb );
-        };
-        self.$doWork( task, worker, cb );
+    this.updateState();
+    this.$trigger();
+};
+
+JobManager.prototype.$onLoadMore = function(){
+    var self = this;
+    self.isLoadingTakingPlace = true;
+    self.onLoadMore(function(){
+        self.isLoadingTakingPlace = false;
     });
 };
 
 JobManager.prototype.pause = function(){
-    this.state = STATE.PAUSED;
+    this.state = STATE.NOT_RUNNING;
 };
 
 JobManager.prototype.resume = function(){
-    this.state = STATE.INITIALIZED;
     this.start();
 };
 
