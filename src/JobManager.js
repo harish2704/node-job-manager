@@ -30,12 +30,24 @@ function JobManager(opts){
 
 JobManager.prototype.updateState = function(){
     var workers = this.workers;
-    var tmpPoolLen = workers.length &&  (workers.length * Math.ceil( this.concurrency/workers.length ) ) , i;
+    var tmpPoolBlock = workers.length &&  Math.ceil( this.concurrency/workers.length ) , i;
     var tmpPool = [];
-    for( i=0; i < tmpPoolLen; i++){
-        tmpPool[i] = workers[ i % workers.length ];
+    for( i=0; i < tmpPoolBlock; i++){
+        tmpPool = tmpPool.concat( this.workers );
     }
     this.tmpPool = tmpPool;
+    this.tmpPoolLen = tmpPoolBlock * this.workers.length ;
+};
+
+JobManager.prototype.setConcurrency = function( newVal ){
+    if( newVal > this.tmpPoolLen ){
+        var tmpPool = this.tmpPool;
+        var additionalPoolBlocks = Math.ceil( ( newVal - this.tmpPoolLen )/this.workers.length ), i;
+        for( i=0; i < additionalPoolBlocks; i++){
+            tmpPool = tmpPool.concat( this.workers );
+        }
+        this.tmpPoolLen += additionalPoolBlocks * this.workers.length ;
+    }
 };
 
 /*

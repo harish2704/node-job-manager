@@ -72,5 +72,20 @@ describe('JobManager', function(){
             jm.runningTasks.should.be.equal( 0 );
             done();
         });
+
+        it('should dynamically change concurrency', function( done ){
+            jm.concurrency = NO_WORKERS-1;
+            jm.updateState();
+            jm.tmpPoolLen.should.be.equal( NO_WORKERS );
+            jm.setConcurrency( (2*NO_WORKERS) +1 );
+            jm.tmpPoolLen.should.be.equal( 3*NO_WORKERS );
+            jm.setConcurrency( (3*NO_WORKERS) +1 );
+            jm.tmpPoolLen.should.be.equal( 4*NO_WORKERS );
+            jm.setConcurrency( (4*NO_WORKERS) +1 );
+            jm.tmpPoolLen.should.be.equal( 5*NO_WORKERS );
+            jm.setConcurrency( (5*NO_WORKERS) +1 );
+            jm.tmpPoolLen.should.be.equal( 6*NO_WORKERS );
+            done();
+        });
     });
 });
