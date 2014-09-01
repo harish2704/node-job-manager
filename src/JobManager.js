@@ -48,6 +48,7 @@ JobManager.prototype.setConcurrency = function( newVal ){
         }
         this.tmpPoolLen += additionalPoolBlocks * this.workers.length ;
     }
+    this.concurrency = newVal;
 };
 
 /*
@@ -70,8 +71,11 @@ JobManager.prototype.getFromPool = function(){
 
 JobManager.prototype.$doWork_ = function( cb ){
     var self = this;
-    var worker = self.getFromPool();
     var task = self.tasks.splice(0, 1)[0];
+    if( task == undefined ){
+        if( this.onStopped ){ this.onStopped(); }
+    }
+    var worker = self.getFromPool();
     this.work( task, worker, function(err){
         if(err){
             self.onError(err, task, worker );
@@ -113,6 +117,12 @@ JobManager.prototype.$onLoadMore = function(){
 JobManager.prototype.pause = function(){
     this.state = STATE.NOT_RUNNING;
 };
+
+JobManager.prototype.stop = function(){
+    this.state = STATE.NOT_RUNNING;
+    if( this.onStopped ){ this.onStopped(); }
+};
+
 
 JobManager.prototype.resume = function(){
     this.start();
