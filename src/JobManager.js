@@ -9,6 +9,7 @@ function JobManager(opts){
     //opts
     this.notifyAt = opts.notifyAt|| 3;
     this.concurrency = opts.concurrency || 20;
+    this.minConcurrency = opts.minConcurrency != null ? opts.minConcurrency : 2;
     
     // state
     this.state = STATE.NOT_RUNNING;
@@ -40,7 +41,7 @@ JobManager.prototype.updateState = function(){
 };
 
 JobManager.prototype.setConcurrency = function( newVal ){
-    if( newVal > 1){
+    if( newVal > this.minConcurrency ){
         if( newVal > this.tmpPoolLen ){
             var tmpPool = this.tmpPool;
             var additionalPoolBlocks = Math.ceil( ( newVal - this.tmpPoolLen )/this.workers.length ), i;
