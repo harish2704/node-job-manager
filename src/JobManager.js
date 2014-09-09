@@ -80,7 +80,7 @@ JobManager.prototype.$doWork_ = function( cb ){
     }
     var worker = self.getFromPool();
     this.work( task, worker, function(err){
-        if(err){
+        if(err && self.onError ){
             self.onError(err, task, worker );
         }
         if(self.tasks.length/self.concurrency < self.notifyAt && (!self.isLoadingTakingPlace) ){
@@ -103,7 +103,7 @@ JobManager.prototype.$trigger = function (){
     }
 };
 
-JobManager.prototype._start = function( ) {
+JobManager.prototype.start = function( ) {
     this.state = STATE.RUNNING;
     this.updateState();
     this.$trigger();
