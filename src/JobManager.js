@@ -77,6 +77,7 @@ JobManager.prototype.$doWork_ = function( cb ){
     var task = self.tasks.splice(0, 1)[0];
     if( task == undefined ){
         this.stop();
+        return;
     }
     var worker = self.getFromPool();
     this.work( task, worker, function(err){
@@ -96,7 +97,7 @@ JobManager.prototype.$doWork_ = function( cb ){
 
 JobManager.prototype.$trigger = function (){
     var self = this;
-    while( this.runningTasks < this.concurrency && this.state == STATE.RUNNING && this.tasks.length  ){
+    while( this.runningTasks < this.concurrency && this.state == STATE.RUNNING ){
         this.$doWork_( function(){
             self.$trigger();
         });
