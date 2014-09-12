@@ -90,6 +90,9 @@ JobManager.prototype.$doWork_ = function( cb ){
             }
         }
         cb();
+        if( self.state == STATE.NOT_RUNNING  ){
+            if( ( self.runningTasks == 1 ) &&  self.onStopped ) { self.onStopped(); }
+        }
         self.returnToPool( worker );
     });
 };
@@ -124,7 +127,6 @@ JobManager.prototype.pause = function(){
 
 JobManager.prototype.stop = function(){
     this.state = STATE.NOT_RUNNING;
-    if( this.onStopped ){ this.onStopped(); }
 };
 
 
