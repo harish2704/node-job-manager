@@ -11,6 +11,16 @@
     "asynchronous",
     "parallel"
   ],
-  "author": "Harish.K <harish2704@gmail.com>",
-  "license": "BSD-2-Clause"
+  "author": {
+    "name": "Harish.K",
+    "email": "harish2704@gmail.com"
+  },
+  "license": "BSD-2-Clause",
+  "readme": "ERROR: No README data found!",
+  "_id": "job-manager@0.0.1",
+  "dist": {
+    "shasum": "06c8c7558143c473f748db83876de9d0a449c764"
+  },
+  "_resolved": "git+https://github.com/harish2704/node-job-manager#971f97e5f5985d58614fd3dbcca583dba250e964",
+  "_from": "git+https://github.com/harish2704/node-job-manager"
 }
