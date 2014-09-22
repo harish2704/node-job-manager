@@ -110,14 +110,22 @@ JobManager.prototype.$trigger = function (){
 JobManager.prototype.start = function( ) {
     this.state = STATE.RUNNING;
     this.updateState();
-    this.$trigger();
+    var self = this;
+    if( this.tasks.length ) {
+        return this.$trigger();
+    }
+    return this.$onLoadMore( function(){
+        self.$trigger();
+    });
 };
 
-JobManager.prototype.$onLoadMore = function(){
+JobManager.prototype.$onLoadMore = function( cb ){
+    cb = cb || function(){};
     var self = this;
     self.isLoadingTakingPlace = true;
     self.onLoadMore(function(){
         self.isLoadingTakingPlace = false;
+        return cb();
     });
 };
 
