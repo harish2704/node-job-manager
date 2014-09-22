@@ -20,6 +20,7 @@ function JobManager(opts){
     this.onLoadMore = null;
     this.onError = null;
     this.isLoadingTakingPlace = false;
+    this.endReached = false;
     this.runningTasks = 0;
 }
 /*
@@ -85,7 +86,7 @@ JobManager.prototype.$doWork_ = function( cb ){
             self.onError(err, task, worker );
         }
         if(self.tasks.length/self.concurrency < self.notifyAt && (!self.isLoadingTakingPlace) ){
-            if( self.onLoadMore ) {
+            if( self.onLoadMore && !self.endReached ) {
                 self.$onLoadMore();
             }
         }
