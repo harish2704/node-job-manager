@@ -1,6 +1,6 @@
 {
   "name": "job-manager",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "A task manager class wich runs tasks with given workers, running N tasks at a time, automatically load works, pause resume etc",
   "main": "src/JobManager.js",
   "scripts": {
@@ -16,7 +16,6 @@
     "email": "harish2704@gmail.com"
   },
   "license": "BSD-2-Clause",
-  "readme": "README.md",
   "_id": "job-manager@0.0.1",
   "_from": "git+https://github.com/harish2704/node-job-manager"
 }
