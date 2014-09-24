@@ -10,7 +10,7 @@ function JobManager(opts){
     this.notifyAt = opts.notifyAt|| 3;
     this.concurrency = opts.concurrency || 20;
     this.minConcurrency = opts.minConcurrency != null ? opts.minConcurrency : 2;
-    
+
     // state
     this.state = STATE.NOT_RUNNING;
 
@@ -22,6 +22,8 @@ function JobManager(opts){
     this.isLoadingTakingPlace = false;
     this.endReached = false;
     this.runningTasks = 0;
+    this.tmpPoolLen=0;
+    this.tmpPool = [];
 }
 /*
  * JobManager.prototype.__defineSetter__( 'workers', function(workers){
@@ -31,26 +33,24 @@ function JobManager(opts){
  */
 
 JobManager.prototype.updateState = function(){
-    var workers = this.workers;
-    var tmpPoolBlock = workers.length &&  Math.ceil( this.concurrency/workers.length ) , i;
-    var tmpPool = [];
-    for( i=0; i < tmpPoolBlock; i++){
-        tmpPool = tmpPool.concat( this.workers );
+    this.updateTmpPool( this.concurrency );
+};
+
+JobManager.prototype.updateTmpPool = function(newVal){
+    if( newVal > this.tmpPoolLen ){
+        var tmpPool = this.tmpPool;
+        var additionalPoolBlocks = Math.ceil( ( newVal - this.tmpPoolLen )/this.workers.length ), i;
+        for( i=0; i < additionalPoolBlocks; i++){
+            tmpPool = tmpPool.concat( this.workers );
+        }
+        this.tmpPoolLen += additionalPoolBlocks * this.workers.length ;
+        this.tmpPool = tmpPool;
     }
-    this.tmpPool = tmpPool;
-    this.tmpPoolLen = tmpPoolBlock * this.workers.length ;
 };
 
 JobManager.prototype.setConcurrency = function( newVal ){
     if( newVal > this.minConcurrency ){
-        if( newVal > this.tmpPoolLen ){
-            var tmpPool = this.tmpPool;
-            var additionalPoolBlocks = Math.ceil( ( newVal - this.tmpPoolLen )/this.workers.length ), i;
-            for( i=0; i < additionalPoolBlocks; i++){
-                tmpPool = tmpPool.concat( this.workers );
-            }
-            this.tmpPoolLen += additionalPoolBlocks * this.workers.length ;
-        }
+        this.updateTmpPool(newVal);
         this.concurrency = newVal;
     }
 };
@@ -90,11 +90,11 @@ JobManager.prototype.$doWork_ = function( cb ){
                 self.$onLoadMore();
             }
         }
-        cb();
         if( self.state == STATE.NOT_RUNNING  ){
             if( ( self.runningTasks == 1 ) &&  self.onStopped ) { self.onStopped(); }
         }
         self.returnToPool( worker );
+        cb();
     });
 };
 
