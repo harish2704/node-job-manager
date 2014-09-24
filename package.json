@@ -1,10 +1,14 @@
 {
   "name": "job-manager",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "A task manager class wich runs tasks with given workers, running N tasks at a time, automatically load works, pause resume etc",
   "main": "src/JobManager.js",
   "scripts": {
     "test": "mocha -R spec test/*.spec.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/harish2704/node-job-manager"
   },
   "keywords": [
     "job-manager",
@@ -16,6 +20,7 @@
     "email": "harish2704@gmail.com"
   },
   "license": "BSD-2-Clause",
-  "_id": "job-manager@0.0.1",
-  "_from": "git+https://github.com/harish2704/node-job-manager"
+  "bugs": {
+    "url": "https://github.com/harish2704/node-job-manager/issues"
+  }
 }
