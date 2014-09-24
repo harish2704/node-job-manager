@@ -24,7 +24,27 @@ Overview
 * ```state```: NOT_RUNNING | RUNNING.
 * ```isLoadingTakingPlace```: onLoadMore function is taking place.
 
+Usage
+-----
+```javascript
+var JobManager = require('job-manager').JobManager;
+var jm = new JobManager({ configuration options});
+jm.tasks = tasks;
+jm.onLoadMore = function(cb){// code; if( !tasks ){ this.endReached = true; }  cb()}
+jm.work = function(task, worker,cb){ // worker.process( task, cb ); }
+jm.onError = function( err, task, worker){ log( err,  task, worker ); }
+jm.onStopped = function(){ // log('Finished'); cb(); }
+jm.start();
+// jm.stop();
+```
 
 Demo
 ----
  A pure javascript demo at http://harish2704.github.io/jobmanager-demo/test.html will give a more cleat idea. This demo uses the same JobManager class to do the animation.
+
+
+Self promotion
+--------------
+* I am a javascript freelancer. You can hire me.
+* star my repos.
+
