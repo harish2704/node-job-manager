@@ -1,7 +1,7 @@
 {
   "name": "job-manager",
-  "version": "0.0.3",
-  "description": "A task manager class wich runs tasks with given workers, running N tasks at a time, automatically load works, pause resume etc",
+  "version": "0.0.4",
+  "description": "A queue manager class which process tasks with given workers, with adjustable concurrency. It can automatically load tasks, pause resume etc",
   "main": "src/JobManager.js",
   "scripts": {
     "test": "mocha -R spec test/*.spec.js"
@@ -13,7 +13,13 @@
   "keywords": [
     "job-manager",
     "asynchronous",
-    "parallel"
+    "parallel",
+    "queue",
+    "async",
+    "job",
+    "task",
+    "concurrency",
+    "concurrent"
   ],
   "author": {
     "name": "Harish.K",
