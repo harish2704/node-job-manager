@@ -22,6 +22,8 @@ function JobManager(opts){
     this.isLoadingTakingPlace = false;
     this.endReached = false;
     this.runningTasks = 0;
+    this.tmpPoolLen=0;
+    this.tmpPool = [];
 }
 /*
  * JobManager.prototype.__defineSetter__( 'workers', function(workers){
