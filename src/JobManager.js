@@ -5,6 +5,7 @@ var utils = require('./utils');
 var STATE = utils.createEnum([ 'RUNNING', 'PAUSED', 'NOT_RUNNING']);
 
 function JobManager(opts){
+    opts = opts || {};
 
     //opts
     this.notifyAt = opts.notifyAt|| 3;
