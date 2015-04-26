@@ -4,6 +4,19 @@ var utils = require('./utils');
 
 var STATE = utils.createEnum([ 'RUNNING', 'PAUSED', 'NOT_RUNNING']);
 
+var defaultOnErrorFn = function(task, worker, cb ){
+  var e = Error( 'onError function is not implemented' );
+  throw ( e );
+};
+var defaultonLoadMoreFn = function(task, worker, cb ){
+  var e = Error( 'onLoadMore function is not implemented' );
+  throw ( e );
+};
+var defaultWorkFn = function(task, worker, cb ){
+  var e = Error( 'Work function is not implemented' );
+  throw ( e );
+};
+
 function JobManager(opts){
     opts = opts || {};
 
@@ -11,27 +24,21 @@ function JobManager(opts){
     this.notifyAt = opts.notifyAt|| 3;
     this.concurrency = opts.concurrency || 20;
     this.minConcurrency = opts.minConcurrency != null ? opts.minConcurrency : 2;
+    this.workers = opts.workers || [];
+    this.tasks = opts.tasks || [];
+    this.work = opts.work || defaultWorkFn;
+    this.onLoadMore = opts.onLoadMore || defaultonLoadMoreFn;
+    this.onError = opts.onError || defaultOnErrorFn;
     
     // state
     this.state = STATE.NOT_RUNNING;
 
-    this.workers = [];
-    this.tasks = [];
-    this.work = null;
-    this.onLoadMore = null;
-    this.onError = null;
     this.isLoadingTakingPlace = false;
     this.endReached = false;
     this.runningTasks = 0;
     this.tmpPoolLen=0;
     this.tmpPool = [];
 }
-/*
- * JobManager.prototype.__defineSetter__( 'workers', function(workers){
- *     this.$workers = workers;
- *     this.updateState();
- * });
- */
 
 JobManager.prototype.updateState = function(){
     var workers = this.workers;
@@ -84,7 +91,7 @@ JobManager.prototype.$doWork_ = function( cb ){
             self.$onLoadMore();
         }
     }
-    if( task == undefined ){
+    if( task === undefined ){
         if(this.isLoadingTakingPlace){
             this.pause();
         } else {
@@ -108,10 +115,11 @@ JobManager.prototype.$doWork_ = function( cb ){
 
 JobManager.prototype.$trigger = function (){
     var self = this;
+    var cb = function (){
+      self.$trigger();
+    };
     while( this.runningTasks < this.concurrency && this.state === STATE.RUNNING ){
-        this.$doWork_( function(){
-            self.$trigger();
-        });
+        this.$doWork_(cb);
     }
 };
 
