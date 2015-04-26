@@ -2,7 +2,20 @@
 
 var utils = require('./utils');
 
-var STATE = utils.createEnum([ 'RUNNING', 'PAUSED', 'NOT_RUNNING']);
+/**
+* state of a JobManager instance will be always any one of following state
+* @readonly
+* @enum {Number}
+*/
+var STATE = utils.createEnum([ 
+   /* Running state */
+  'RUNNING',
+   /* Paused state */
+  'PAUSED',
+   /* Not running */
+  'NOT_RUNNING'
+  ]);
+
 
 var defaultOnErrorFn = function(task, worker, cb ){
   var e = Error( 'onError function is not implemented' );
@@ -17,6 +30,19 @@ var defaultWorkFn = function(task, worker, cb ){
   throw ( e );
 };
 
+
+/**
+* @class JobManager
+* The JobManager class. It is web-worker manager class. It can do the following
+*
+* @param {Object} opts Options as object.
+* @param {Number} opts.notifyAt Options as object.
+* @param {Number} opts.concurrency Options as object.
+* @param {Number} opts.minConcurrency Options as object.
+* @param {Array} opts.workers Options as object.
+*
+* @return JobManager instance
+*/
 function JobManager(opts){
     opts = opts || {};
 
@@ -40,6 +66,13 @@ function JobManager(opts){
     this.tmpPool = [];
 }
 
+/**
+ * updateState
+ * Called internally to update internal temporary pool of workers.
+ * It should be called if workers array is manually modified
+ *
+ * @return null
+ */
 JobManager.prototype.updateState = function(){
     var workers = this.workers;
     var tmpPoolBlock = workers.length &&  Math.ceil( this.concurrency/workers.length ) , i;
@@ -51,6 +84,14 @@ JobManager.prototype.updateState = function(){
     this.tmpPoolLen = tmpPoolBlock * this.workers.length ;
 };
 
+/**
+ * setConcurrency
+ * Change concurrency of JobManager instance. 
+ * Temporary pool of workers are updated according to this value
+ *
+ * @param {Number} newVal new concurrency value
+ * @return {undefined}
+ */
 JobManager.prototype.setConcurrency = function( newVal ){
     if( newVal > this.minConcurrency ){
         if( newVal > this.tmpPoolLen ){
@@ -65,17 +106,24 @@ JobManager.prototype.setConcurrency = function( newVal ){
     }
 };
 
-/*
- * JobManager.prototype.__defineGetter__( 'workers', function(){
- *     return this.$workers;
- * });
+/**
+ * returnToPool
+ * Release a worker to pool. It is called after finishing work function.
+ *
+ * @param {Woker} w worker
+ * @return {undefined}
  */
-
 JobManager.prototype.returnToPool = function (w){
     this.runningTasks--;
     this.tmpPool.push( w );
 };
 
+/**
+ * getFromPool
+ * Get a worker instance from the pool
+ *
+ * @return {undefined}
+ */
 JobManager.prototype.getFromPool = function(){
     if( this.runningTasks < this.concurrency ){
         this.runningTasks++;
@@ -123,6 +171,12 @@ JobManager.prototype.$trigger = function (){
     }
 };
 
+/**
+ * start
+ * start the JobManager instance.
+ *
+ * @return {undefined}
+ */
 JobManager.prototype.start = function( ) {
     this.state = STATE.RUNNING;
     this.updateState();
@@ -148,10 +202,22 @@ JobManager.prototype.$onLoadMore = function( cb ){
     });
 };
 
+/**
+ * pause
+ * pause the execution of tasks by JobManager. The system will not be paused at the instant. All currently working workers need to finish its work.
+ *
+ * @return {undefined}
+ */
 JobManager.prototype.pause = function(){
     this.state = STATE.PAUSED;
 };
 
+/**
+ * stop
+ * Stop JobManager
+ *
+ * @return {undefined}
+ */
 JobManager.prototype.stop = function(){
     this.state = STATE.NOT_RUNNING;
     if( ( this.tasks.length === 0 ) && ( this.runningTasks === 0 ) && ( !this.isLoadingTakingPlace ) ){
@@ -160,6 +226,12 @@ JobManager.prototype.stop = function(){
 };
 
 
+/**
+ * resume
+ * resume JobManager instance's operation after pausing
+ *
+ * @return {undefined}
+ */
 JobManager.prototype.resume = function(){
     this.start();
 };
